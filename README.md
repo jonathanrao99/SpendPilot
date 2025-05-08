@@ -1,50 +1,97 @@
-# Welcome to your Expo app 👋
+# SpendPilot
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+SpendPilot is a cross-platform (iOS/Android/Web) mobile application built with Expo and React Native. It helps small businesses and individuals quickly scan, categorize, and manage bills and receipts, providing an easy way to track business expenses and view analytics.
 
-## Get started
+## Key Features
 
-1. Install dependencies
+• Scan or upload bills and receipts using the camera or image picker
+• Automatic persistence of scanned images to local storage
+• Manual or future automated cropping of bill images
+• Form to enter and validate bill details: store name, date, category, tax paid, and total
+• Categorize expenses into: Cooking Supplies, Electrical & Hardware, Gas, Other
+• View a dashboard of existing bills with quick summaries
+• Navigate between tabs: Dashboard, Analytics, Delivery Performance, Events, Scan
+• Settings screen to configure business preferences
+• Themed UI with dark/light mode support
 
+## Installation and Setup
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-org/spendpilot.git
+   cd spendpilot
+   ```
+2. Install dependencies:
    ```bash
    npm install
    ```
-
-2. Start the app
-
+3. Start the development server:
    ```bash
    npx expo start
    ```
+4. Launch the app in your preferred environment:
+   - iOS Simulator (macOS only)
+   - Android Emulator
+   - Expo Go on a physical device
+   - Web browser via Expo Web
 
-In the output, you'll find options to open the app in a
+## Project Structure
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+spendpilot/
+├─ app/                  # File-based routes (via expo-router)
+│  ├─ (tabs)/            # Main tab navigator screens
+│  ├─ create-bill.tsx    # Form for new bills
+│  ├─ scan-bill.tsx      # Camera & upload flow
+│  ├─ settings.tsx       # App settings
+│  └─ _layout.tsx        # Root layout & stack configuration
+├─ components/           # Reusable UI components
+├─ context/              # React Context providers (BillsContext, EventsContext)
+├─ hooks/                # Custom hooks (useColorScheme, useThemeColor)
+├─ constants/            # App-wide constants (Colors)
+├─ assets/               # Fonts and images
+├─ scripts/              # Utility scripts (reset project)
+├─ README.md             # This file
+├─ package.json
+└─ tsconfig.json
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Core Libraries & Dependencies
 
-## Learn more
+- [Expo](https://expo.dev) & [expo-router](https://docs.expo.dev/router/introduction)
+- [React Native Camera](https://docs.expo.dev/versions/latest/sdk/camera)
+- [Expo Image Picker](https://docs.expo.dev/versions/latest/sdk/imagepicker)
+- [React Native Paper](https://callstack.github.io/react-native-paper)
+- [React Native Reanimated](https://docs.swmansion.com/react-native-reanimated)
+- [Safe Area Context](https://github.com/th3rdwave/react-native-safe-area-context)
 
-To learn more about developing your project with Expo, look at the following resources:
+## Usage Flow
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+1. **Scan or Upload** a bill via the Scan tab
+2. **Preview** the captured image and **Confirm** to proceed
+3. **Fill in** the bill details form on the Create Bill screen
+4. **Save** the bill, which persists the image and details locally
+5. **View** saved bills on the Dashboard, tap to see details in a modal
+6. **Filter** and analyze expenses in the Analytics tab
+7. **Manage** business settings in the Settings screen
 
-## Join the community
+## Future Enhancements
 
-Join our community of developers creating universal apps.
+- Implement **automatic cropping** and edge detection for bills
+- Add **OCR** to automatically extract text from receipts
+- Provide **export** options (CSV, PDF)
+- Integrate **cloud sync** and multi-device support
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Contributing
+
+Contributions, issues, and feature requests are welcome! Please:
+
+1. Fork the repo
+2. Create a feature branch (`git checkout -b feature-name`)
+3. Commit your changes (`git commit -m 'Add feature'`)
+4. Push to the branch (`git push origin feature-name`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
