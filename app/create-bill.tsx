@@ -65,20 +65,25 @@ export default function CreateBillScreen() {
 
   const onChangeDate = (_event: any, selectedDate?: Date) => {
     if (Platform.OS !== 'android') {
-        setShowPicker(false);
+      setShowPicker(false);
     }
     if (selectedDate) {
-      const year = selectedDate.getFullYear();
       const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
       const day = String(selectedDate.getDate()).padStart(2, '0');
-      setDate(`${year}-${month}-${day}`);
+      const year = selectedDate.getFullYear();
+      setDate(`${month}/${day}/${year}`);
     }
   };
 
   const showDatePicker = () => {
     if (Platform.OS === 'android') {
       DateTimePickerAndroid.open({
-        value: date ? new Date(date) : new Date(),
+        value: date
+          ? (() => {
+              const [m, d, y] = date.split('/');
+              return new Date(Number(y), Number(m) - 1, Number(d));
+            })()
+          : new Date(),
         mode: 'date',
         onChange: onChangeDate,
       });
@@ -137,16 +142,23 @@ export default function CreateBillScreen() {
         >
           <TextInput
             label="Date"
-            placeholder="YYYY-MM-DD"
+            placeholder="MM/DD/YYYY"
             value={date}
             error={attempted && !date}
+            onFocus={showDatePicker}
             showSoftInputOnFocus={false}
             editable={false}
+            style={styles.input}
           />
         </View>
         {showPicker && Platform.OS !== 'android' && (
           <DateTimePicker
-            value={date ? new Date(date) : new Date()}
+            value={date
+              ? (() => {
+                  const [m, d, y] = date.split('/');
+                  return new Date(Number(y), Number(m) - 1, Number(d));
+                })()
+              : new Date()}
             mode="date"
             display="default"
             onChange={onChangeDate}

@@ -230,7 +230,13 @@ export default function ScanBillScreen() {
             contentContainerStyle={styles.list}
             renderItem={({ item }) => (
               <Card style={styles.card} onPress={() => handleSelectBill(item)}>
-                <Card.Title title={item.storeName} subtitle={`${item.date} • Total: ${item.total}`} />
+                <Card.Title title={item.storeName} subtitle={item.date} />
+                <Card.Content>
+                  <View style={styles.cardDetails}>
+                    <ThemedText>Total: {item.total}</ThemedText>
+                    <ThemedText>Tax: {item.taxPaid}</ThemedText>
+                  </View>
+                </Card.Content>
               </Card>
             )}
           />
@@ -606,5 +612,10 @@ var styles = StyleSheet.create({
   },
   input: {
     marginBottom: 16,
+  },
+  cardDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
   },
 }); 
