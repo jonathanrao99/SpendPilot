@@ -1,5 +1,7 @@
 import { BillsProvider } from '@/context/BillsContext';
+import { DeliveryProvider } from '@/context/DeliveryContext';
 import { EventsProvider } from '@/context/EventsContext';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
@@ -7,8 +9,6 @@ import { StatusBar } from 'expo-status-bar';
 import { MD3DarkTheme as PaperDarkTheme, MD3LightTheme as PaperLightTheme, Provider as PaperProvider } from 'react-native-paper';
 import 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -29,21 +29,23 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <EventsProvider>
         <BillsProvider>
-          <PaperProvider theme={paperTheme}>
-            <ThemeProvider value={navTheme}>
-              <Stack>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="settings" options={{ headerShown: false }} />
-                <Stack.Screen name="create-bill" options={{ headerShown: false }} />
-                <Stack.Screen name="+not-found" options={{ headerShown: false }} />
-              </Stack>
-              <StatusBar
-                style={colorScheme === 'dark' ? 'light' : 'dark'}
-                backgroundColor={paperTheme.colors.surface}
-                translucent
-              />
-            </ThemeProvider>
-          </PaperProvider>
+          <DeliveryProvider>
+            <PaperProvider theme={paperTheme}>
+              <ThemeProvider value={navTheme}>
+                <Stack>
+                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                  <Stack.Screen name="settings" options={{ headerShown: false }} />
+                  <Stack.Screen name="create-bill" options={{ headerShown: false }} />
+                  <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+                </Stack>
+                <StatusBar
+                  style={colorScheme === 'dark' ? 'light' : 'dark'}
+                  backgroundColor={paperTheme.colors.surface}
+                  translucent
+                />
+              </ThemeProvider>
+            </PaperProvider>
+          </DeliveryProvider>
         </BillsProvider>
       </EventsProvider>
     </SafeAreaProvider>

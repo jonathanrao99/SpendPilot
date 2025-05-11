@@ -66,7 +66,7 @@ export default function SettingsScreen() {
         </List.Section>
         <Divider />
         <List.Section title="Reports">
-          <Button mode="contained" onPress={() => {}} style={styles.button}>
+          <Button mode="contained" onPress={() => router.push('/settings/build-report')} style={styles.button}>
             Build New Report
           </Button>
         </List.Section>
