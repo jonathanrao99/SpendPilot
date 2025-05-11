@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // app/(tabs)/delivery-performance.tsx
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
@@ -210,11 +211,29 @@ export default function DeliveryPerformanceScreen() {
           <Paragraph>No delivery data yet. Upload CSV/Excel to see charts.</Paragraph>
         )}
       </ScrollView>
+=======
+import { ThemedText } from '@/components/ThemedText';
+import { ThemedView } from '@/components/ThemedView';
+import Header from '@/components/ui/Header';
+import React from 'react';
+import { Platform, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+export default function DeliveryPerformanceScreen() {
+  const insets = useSafeAreaInsets();
+  const headerHeight = insets.top + (Platform.OS === 'ios' ? 44 : 56);
+  return (
+    <ThemedView style={[styles.container, { paddingTop: headerHeight }] }>
+      <Header title="Delivery Performance" />
+      <ThemedText type="title">Delivery Performance</ThemedText>
+      <ThemedText>Placeholder for delivery partner performance metrics.</ThemedText>
+>>>>>>> 8189ee61bcc1da1cca4c311014d1546dbb150c8e
     </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
+<<<<<<< HEAD
   container: { flex:1, paddingTop: Platform.OS==='ios'?60:70 },
   content: { padding:16 },
   filterRow: { flexDirection:'row', justifyContent:'space-around', marginBottom:16 },
@@ -254,3 +273,12 @@ const styles = StyleSheet.create({
   },
   fileName: { flex: 1 },
 });
+=======
+  container: {
+    flex: 1,
+    padding: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+}); 
+>>>>>>> 8189ee61bcc1da1cca4c311014d1546dbb150c8e

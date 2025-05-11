@@ -65,6 +65,7 @@ export default function CreateBillScreen() {
 
   const onChangeDate = (_event: any, selectedDate?: Date) => {
     if (Platform.OS !== 'android') {
+<<<<<<< HEAD
       setShowPicker(false);
     }
     if (selectedDate) {
@@ -72,18 +73,28 @@ export default function CreateBillScreen() {
       const day = String(selectedDate.getDate()).padStart(2, '0');
       const year = selectedDate.getFullYear();
       setDate(`${month}/${day}/${year}`);
+=======
+        setShowPicker(false);
+    }
+    if (selectedDate) {
+      setDate(selectedDate.toISOString().split('T')[0]);
+>>>>>>> 8189ee61bcc1da1cca4c311014d1546dbb150c8e
     }
   };
 
   const showDatePicker = () => {
     if (Platform.OS === 'android') {
       DateTimePickerAndroid.open({
+<<<<<<< HEAD
         value: date
           ? (() => {
               const [m, d, y] = date.split('/');
               return new Date(Number(y), Number(m) - 1, Number(d));
             })()
           : new Date(),
+=======
+        value: date ? new Date(date) : new Date(),
+>>>>>>> 8189ee61bcc1da1cca4c311014d1546dbb150c8e
         mode: 'date',
         onChange: onChangeDate,
       });
@@ -135,6 +146,7 @@ export default function CreateBillScreen() {
           error={attempted && !storeName}
           style={styles.input}
         />
+<<<<<<< HEAD
         <View
           style={styles.input}
           onStartShouldSetResponder={() => true}
@@ -159,6 +171,20 @@ export default function CreateBillScreen() {
                   return new Date(Number(y), Number(m) - 1, Number(d));
                 })()
               : new Date()}
+=======
+        <TextInput
+          label="Date"
+          placeholder="YYYY-MM-DD"
+          value={date}
+          error={attempted && !date}
+          onFocus={showDatePicker}
+          showSoftInputOnFocus={false}
+          style={styles.input}
+        />
+        {showPicker && Platform.OS !== 'android' && (
+          <DateTimePicker
+            value={date ? new Date(date) : new Date()}
+>>>>>>> 8189ee61bcc1da1cca4c311014d1546dbb150c8e
             mode="date"
             display="default"
             onChange={onChangeDate}
