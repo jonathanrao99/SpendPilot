@@ -5,6 +5,10 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
+import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
+import { useFonts as useInterFonts, Inter_400Regular, Inter_500Medium, Inter_700Bold } from '@expo-google-fonts/inter';
+import Colors from '@/constants/Colors';
+import type { MD3Theme } from 'react-native-paper';
 
 import { useColorScheme } from '@/components/useColorScheme';
 
@@ -22,8 +26,10 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+  const [loaded, error] = useInterFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_700Bold,
     ...FontAwesome.font,
   });
 
@@ -47,13 +53,66 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
-
+  const isDark = colorScheme === 'dark';
+  const interFont = {
+    fontFamily: 'Inter_400Regular',
+    fontWeight: 'normal',
+    letterSpacing: 0,
+    fontSize: 16,
+    lineHeight: 24,
+  };
+  const interFontMedium = {
+    fontFamily: 'Inter_500Medium',
+    fontWeight: '500',
+    letterSpacing: 0,
+    fontSize: 16,
+    lineHeight: 24,
+  };
+  const interFontBold = {
+    fontFamily: 'Inter_700Bold',
+    fontWeight: '700',
+    letterSpacing: 0,
+    fontSize: 16,
+    lineHeight: 24,
+  };
+  const theme = {
+    ...(isDark ? MD3DarkTheme : MD3LightTheme),
+    colors: {
+      ...(isDark ? MD3DarkTheme.colors : MD3LightTheme.colors),
+      primary: Colors[isDark ? 'dark' : 'light'].purple,
+      secondary: Colors[isDark ? 'dark' : 'light'].green,
+      background: Colors[isDark ? 'dark' : 'light'].background,
+      surface: Colors[isDark ? 'dark' : 'light'].card,
+      onSurface: Colors[isDark ? 'dark' : 'light'].text,
+      text: Colors[isDark ? 'dark' : 'light'].text,
+      outline: Colors[isDark ? 'dark' : 'light'].grey,
+    },
+    fonts: {
+      displayLarge: interFontBold,
+      displayMedium: interFontBold,
+      displaySmall: interFontBold,
+      headlineLarge: interFontMedium,
+      headlineMedium: interFontMedium,
+      headlineSmall: interFontMedium,
+      titleLarge: interFontMedium,
+      titleMedium: interFontMedium,
+      titleSmall: interFontMedium,
+      labelLarge: interFontMedium,
+      labelMedium: interFontMedium,
+      labelSmall: interFontMedium,
+      bodyLarge: interFont,
+      bodyMedium: interFont,
+      bodySmall: interFont,
+    },
+  } as any;
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
-    </ThemeProvider>
+    <PaperProvider theme={theme}>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        </Stack>
+      </ThemeProvider>
+    </PaperProvider>
   );
 }
