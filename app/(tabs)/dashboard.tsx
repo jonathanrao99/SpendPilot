@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text, Card, ProgressBar, Button, useTheme } from 'react-native-paper';
 import Feather from '@expo/vector-icons/Feather';
-import { LineChart, PieChart } from 'react-native-gifted-charts';
+import { Canvas, Path, Skia } from '@shopify/react-native-skia';
+import Animated, { useSharedValue, withTiming } from 'react-native-reanimated';
 import Colors from '@/constants/Colors';
+import { StatusBar } from 'expo-status-bar';
 
 const businessData = {
   totalBalance: 19074.45,
@@ -57,8 +59,35 @@ export default function DashboardScreen() {
   const { colors } = useTheme();
   const [selectedTime, setSelectedTime] = useState('Week');
 
+  const chartData = businessData.overview.map((d) => d.value);
+  const chartLabels = businessData.overview.map((d) => d.label);
+  const chartWidth = 340;
+  const chartHeight = 180;
+  const maxValue = 10;
+  const minValue = 0;
+  const points = chartData.map((v, i) => {
+    const x = (i / (chartData.length - 1)) * chartWidth;
+    const y = chartHeight - ((v - minValue) / (maxValue - minValue)) * chartHeight;
+    return { x, y };
+  });
+  const pathStr = points.reduce((acc, p, i) => acc + (i === 0 ? `M${p.x},${p.y}` : ` L${p.x},${p.y}`), '');
+  const animatedProgress = useSharedValue(0);
+  useEffect(() => {
+    animatedProgress.value = withTiming(1, { duration: 1200 });
+  }, []);
+  const [displayedPath, setDisplayedPath] = useState(pathStr);
+  useEffect(() => {
+    const id = setInterval(() => {
+      const len = Math.floor(points.length * animatedProgress.value);
+      const subPoints = points.slice(0, Math.max(2, len));
+      setDisplayedPath(subPoints.reduce((acc, p, i) => acc + (i === 0 ? `M${p.x},${p.y}` : ` L${p.x},${p.y}`), ''));
+    }, 16);
+    return () => clearInterval(id);
+  }, [animatedProgress, points]);
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <StatusBar style="dark" backgroundColor="#fff" />
       <View style={[styles.headerRow, { backgroundColor: colors.background }]}> 
         <Text style={[styles.greeting, { color: colors.onSurface }]}>Hi, Desi Flavors Katy</Text>
         <TouchableOpacity style={styles.bellBtn}>
@@ -112,34 +141,20 @@ export default function DashboardScreen() {
           </Button>
         ))}
       </View>
-      <View style={styles.chartCard}>
-        <LineChart
-          data={businessData.overview.map((d) => ({ value: d.value, label: d.label }))}
-          areaChart
-          curved
-          color={colors.primary}
-          thickness={3}
-          hideDataPoints={false}
-          yAxisColor={colors.outline}
-          xAxisColor={colors.outline}
-          yAxisTextStyle={{ color: colors.onSurface, fontFamily: 'Inter_400Regular' }}
-          xAxisLabelTextStyle={{ color: colors.onSurface, fontFamily: 'Inter_400Regular' }}
-          spacing={24}
-          maxValue={10}
-          height={180}
-          initialSpacing={0}
-          noOfSections={4}
-          rulesType="solid"
-          rulesColor={colors.outline}
-          backgroundColor={colors.background}
-          showVerticalLines={false}
-          showXAxisIndices={false}
-          showYAxisIndices={false}
-          yAxisThickness={0.5}
-          xAxisThickness={0.5}
-          xAxisTextNumberOfLines={1}
-          yAxisTextNumberOfLines={1}
-        />
+      <View style={{ backgroundColor: '#F3F4F6', borderRadius: 18, marginHorizontal: 0, padding: 12, marginBottom: 32, paddingBottom: 24 }}>
+        <Canvas style={{ width: chartWidth, height: chartHeight }}>
+          <Path
+            path={Skia.Path.MakeFromSVGString(displayedPath) || Skia.Path.Make()}
+            color={'#7C3AED'}
+            style="stroke"
+            strokeWidth={3}
+          />
+        </Canvas>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+          {chartLabels.map((label, i) => (
+            <Text key={label} style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: '#6B7280' }}>{label}</Text>
+          ))}
+        </View>
       </View>
 
       {/* Budget Categories */}
@@ -189,6 +204,7 @@ const styles = StyleSheet.create({
   bellBtn: {
     padding: 0,
     borderRadius: 20,
+    paddingBottom: 9,
   },
   bellCircle: {
     backgroundColor: '#F3F4F6',
@@ -260,14 +276,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
     borderRadius: 20,
     minWidth: 80,
-  },
-  chartCard: {
-    backgroundColor: '#F3F4F6',
-    borderRadius: 18,
-    marginHorizontal: 0,
-    padding: 12,
-    marginBottom: 32,
-    paddingBottom: 24,
   },
   categoriesHeader: {
     flexDirection: 'row',

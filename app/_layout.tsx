@@ -10,8 +10,6 @@ import { useFonts as useInterFonts, Inter_400Regular, Inter_500Medium, Inter_700
 import Colors from '@/constants/Colors';
 import type { MD3Theme } from 'react-native-paper';
 
-import { useColorScheme } from '@/components/useColorScheme';
-
 export {
   // Catch any errors thrown by the Layout component.
   ErrorBoundary,
@@ -52,8 +50,7 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = false;
   const interFont = {
     fontFamily: 'Inter_400Regular',
     fontWeight: 'normal',
@@ -107,7 +104,7 @@ function RootLayoutNav() {
   } as any;
   return (
     <PaperProvider theme={theme}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <ThemeProvider value={DefaultTheme}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal' }} />

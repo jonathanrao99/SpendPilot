@@ -21,12 +21,12 @@ export default {
     white,
   },
   dark: {
-    text: white,
-    background: black,
+    text: black,
+    background: white,
     tint: purple,
-    tabIconDefault: darkGrey,
+    tabIconDefault: grey,
     tabIconSelected: purple,
-    card: '#27272A', // Card background
+    card: '#F3F4F6', // Card background
     purple,
     green,
     grey,

@@ -1,39 +1,74 @@
 import React from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import { View, ScrollView, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { Text, useTheme, Card } from 'react-native-paper';
+import { Canvas, Path, Skia } from '@shopify/react-native-skia';
 
-const HEADER_HEIGHT = 100;
-
-const metrics = [
+const HEADER_HEIGHT = 80;
+const kpis = [
   { label: 'Total Sales', value: '$12,500' },
-  { label: 'Avg Order Value', value: '$42.30' },
+  { label: 'Avg Order', value: '$42.30' },
   { label: 'Top Product', value: 'Paneer Tikka' },
-  { label: 'Returning Customers', value: '38%' },
+  { label: 'Returning', value: '38%' },
 ];
+const salesTrend = [4, 7, 5, 9, 7, 3, 2];
+const chartLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const chartWidth = 320;
+const chartHeight = 120;
+const maxValue = 10;
+const minValue = 0;
+const points = salesTrend.map((v, i) => {
+  const x = (i / (salesTrend.length - 1)) * chartWidth;
+  const y = chartHeight - ((v - minValue) / (maxValue - minValue)) * chartHeight;
+  return { x, y };
+});
+const pathStr = points.reduce((acc, p, i) => acc + (i === 0 ? `M${p.x},${p.y}` : ` L${p.x},${p.y}`), '');
 
 export default function AnalyticsScreen() {
   const { colors } = useTheme();
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={[styles.headerRow, { backgroundColor: colors.background }]}> 
-        <Text style={[styles.headerTitle, { color: colors.onSurface }]}>Analytics</Text>
-      </View>
+      <View style={styles.headerRow}><Text style={styles.headerTitle}>Analytics</Text></View>
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingTop: HEADER_HEIGHT, paddingBottom: 32 }}>
-        <View style={styles.metricsRow}>
-          {metrics.map((m) => (
-            <Card key={m.label} style={styles.metricCard}>
-              <Card.Content>
-                <Text style={styles.metricLabel}>{m.label}</Text>
-                <Text style={styles.metricValue}>{m.value}</Text>
-              </Card.Content>
-            </Card>
-          ))}
+        {/* KPI Cards */}
+        <View style={[styles.kpiCardContainer, styles.prominentCard]}>
+          <FlatList
+            data={kpis}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={item => item.label}
+            contentContainerStyle={{ gap: 12 }}
+            renderItem={({ item }) => (
+              <View style={styles.kpiItem}>
+                <Text style={styles.kpiLabel}>{item.label}</Text>
+                <Text style={styles.kpiValue}>{item.value}</Text>
+              </View>
+            )}
+          />
         </View>
-        <View style={{ alignItems: 'center', marginTop: 40 }}>
-          <Text style={{ color: colors.onSurface, fontFamily: 'Inter_400Regular', fontSize: 16 }}>
-            More in-depth business analytics will appear here.
-          </Text>
+        {/* Animated Line Chart */}
+        <Text style={styles.sectionTitle}>Sales Trend</Text>
+        <View style={styles.chartCard}>
+          <Canvas style={{ width: chartWidth, height: chartHeight }}>
+            <Path
+              path={Skia.Path.MakeFromSVGString(pathStr) || Skia.Path.Make()}
+              color={'#7C3AED'}
+              style="stroke"
+              strokeWidth={3}
+            />
+          </Canvas>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+            {chartLabels.map((label) => (
+              <Text key={label} style={styles.chartLabel}>{label}</Text>
+            ))}
+          </View>
         </View>
+        {/* Sectioned Layout */}
+        <Text style={styles.sectionTitle}>Trends</Text>
+        <Card style={styles.sectionCard}><Card.Content><Text>Sales are up 12% this week.</Text></Card.Content></Card>
+        <Text style={styles.sectionTitle}>Breakdown</Text>
+        <Card style={styles.sectionCard}><Card.Content><Text>Top category: Food (60%)</Text></Card.Content></Card>
+        <Text style={styles.sectionTitle}>Insights</Text>
+        <Card style={styles.sectionCard}><Card.Content><Text>Returning customers are increasing.</Text></Card.Content></Card>
       </ScrollView>
     </View>
   );
@@ -44,39 +79,73 @@ const styles = StyleSheet.create({
     height: HEADER_HEIGHT,
     flexDirection: 'row',
     alignItems: 'flex-end',
-    justifyContent: 'flex-start',
     paddingHorizontal: 20,
     borderBottomWidth: 0,
     elevation: 0,
+    backgroundColor: '#fff',
   },
   headerTitle: {
     fontFamily: 'Inter_700Bold',
     fontSize: 22,
+    color: '#18181B',
   },
-  metricsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+  kpiCardContainer: {
     marginHorizontal: 20,
-    marginTop: 24,
-    gap: 12,
-  },
-  metricCard: {
-    width: '47%',
-    borderRadius: 14,
-    marginBottom: 12,
-    backgroundColor: '#F3F4F6',
+    marginTop: -80,
+    borderRadius: 18,
+    marginBottom: 16,
     elevation: 0,
+    minHeight: 120,
+    paddingVertical: 12,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    justifyContent: 'center',
   },
-  metricLabel: {
+  prominentCard: {},
+  kpiItem: {
+    alignItems: 'center',
+    marginRight: 18,
+  },
+  kpiLabel: {
     fontFamily: 'Inter_400Regular',
-    fontSize: 14,
+    fontSize: 13,
     color: '#6B7280',
   },
-  metricValue: {
+  kpiValue: {
     fontFamily: 'Inter_700Bold',
     fontSize: 20,
     marginTop: 4,
+    color: '#7C3AED',
+  },
+  chartCard: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    marginHorizontal: 20,
+    padding: 12,
+    marginTop: 8,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  chartLabel: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  sectionTitle: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 16,
+    marginLeft: 20,
+    marginTop: 12,
+    marginBottom: 4,
     color: '#18181B',
+  },
+  sectionCard: {
+    backgroundColor: '#F3F4F6',
+    borderRadius: 14,
+    marginHorizontal: 20,
+    marginBottom: 12,
+    elevation: 0,
   },
 }); 
