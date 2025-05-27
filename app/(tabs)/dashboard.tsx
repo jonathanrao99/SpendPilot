@@ -1,191 +1,337 @@
-import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-import { Text, Card, ProgressBar, Button, useTheme } from 'react-native-paper';
+// DashboardScreen.tsx
+import React, { useState } from 'react';
+import {
+  View,
+  ScrollView,
+  StyleSheet,
+  Pressable,
+  Platform,
+  useWindowDimensions
+} from 'react-native';
+import {
+  Text,
+  Card,
+  useTheme,
+  Button,
+  Menu
+} from 'react-native-paper';
 import Feather from '@expo/vector-icons/Feather';
-import { Canvas, Path, Skia } from '@shopify/react-native-skia';
-import Animated, { useSharedValue, withTiming } from 'react-native-reanimated';
-import Colors from '@/constants/Colors';
+import {
+  Canvas,
+  Path,
+  Skia,
+  vec,
+  TileMode
+} from '@shopify/react-native-skia';
 import { StatusBar } from 'expo-status-bar';
 
-const businessData = {
-  totalBalance: 19074.45,
-  revenue: 4352.9,
-  expenses: 2180.75,
-  overview: [
-    { label: 'Mon', value: 4.2 },
-    { label: 'Tue', value: 7.1 },
-    { label: 'Wed', value: 5.6 },
-    { label: 'Thu', value: 9.2 },
-    { label: 'Fri', value: 7.5 },
-    { label: 'Sat', value: 3.1 },
-    { label: 'Sun', value: 2.8 },
-  ],
-  categories: [
-    {
-      icon: 'home',
-      label: 'Rent',
-      color: '#A78BFA',
-      spent: 1200,
-      budget: 1500,
-    },
-    {
-      icon: 'users',
-      label: 'Payroll',
-      color: '#34D399',
-      spent: 4500,
-      budget: 6000,
-    },
-    {
-      icon: 'briefcase',
-      label: 'Operations',
-      color: '#818CF8',
-      spent: 900,
-      budget: 1200,
-    },
-    {
-      icon: 'bar-chart-2',
-      label: 'Marketing',
-      color: '#F472B6',
-      spent: 700,
-      budget: 1000,
-    },
-  ],
+type FeatherIconName = React.ComponentProps<typeof Feather>['name'];
+type Point = { x: number; y: number };
+
+// --- Dummy data for three timeframes ---
+const allData = {
+  Daily:   [  800,  950,  700,  900,  850,  920, 1000 ],
+  Weekly:  [4200, 3800, 4500, 4300, 4700, 4900, 5200],
+  Monthly: [12000,13000,12500,13500,14000,14500,15000],
+} as const;
+
+// --- Balance & transactions ---
+const balanceData = {
+  balance: 7200.5,
+  revenue: 4250,
+  profit: 2150,
+  expenses: 2100,
+  dailyAvg: 607,
+  expensesChange: -3,
+  profitChange:   5,
+  dailyAvgChange: 2,
 };
 
-const timeFrames = ['Week', 'Month', 'Year'];
-const HEADER_HEIGHT = 100;
+const transactions: {
+  icon: FeatherIconName;
+  label: string;
+  date: string;
+  amount: number;
+  color: string;
+}[] = [
+  { icon:'shopping-bag', label:'Food Supplies',  date:'May 21, 2:14 pm', amount:-230, color:'#A78BFA' },
+  { icon:'dollar-sign',   label:'Order Payment', date:'May 20, 5:30 pm', amount: 350, color:'#34D399' },
+  { icon:'droplet',       label:'Fuel',          date:'May 20,10:11 am',amount:-120, color:'#818CF8' },
+  { icon:'trending-up',   label:'Sale',          date:'May 19, 3:45 pm', amount: 420, color:'#7C3AED' },
+  { icon:'file-text',     label:'Bill Payment',  date:'May 18, 1:05 pm', amount:-180, color:'#F472B6' },
+];
 
 export default function DashboardScreen() {
   const { colors } = useTheme();
-  const [selectedTime, setSelectedTime] = useState('Week');
+  const { width: screenWidth } = useWindowDimensions();
 
-  const chartData = businessData.overview.map((d) => d.value);
-  const chartLabels = businessData.overview.map((d) => d.label);
-  const chartWidth = 340;
-  const chartHeight = 180;
-  const maxValue = 10;
-  const minValue = 0;
-  const points = chartData.map((v, i) => {
-    const x = (i / (chartData.length - 1)) * chartWidth;
-    const y = chartHeight - ((v - minValue) / (maxValue - minValue)) * chartHeight;
-    return { x, y };
-  });
-  const pathStr = points.reduce((acc, p, i) => acc + (i === 0 ? `M${p.x},${p.y}` : ` L${p.x},${p.y}`), '');
-  const animatedProgress = useSharedValue(0);
-  useEffect(() => {
-    animatedProgress.value = withTiming(1, { duration: 1200 });
-  }, []);
-  const [displayedPath, setDisplayedPath] = useState(pathStr);
-  useEffect(() => {
-    const id = setInterval(() => {
-      const len = Math.floor(points.length * animatedProgress.value);
-      const subPoints = points.slice(0, Math.max(2, len));
-      setDisplayedPath(subPoints.reduce((acc, p, i) => acc + (i === 0 ? `M${p.x},${p.y}` : ` L${p.x},${p.y}`), ''));
-    }, 16);
-    return () => clearInterval(id);
-  }, [animatedProgress, points]);
+  // Timeframe state
+  const [timeframe, setTimeframe] = useState<'Daily' | 'Weekly' | 'Monthly'>('Weekly');
+  const [menuVisible, setMenuVisible] = useState(false);
+
+  // Chart config
+  const cardMargin = 10;
+  const chartWidth = screenWidth - cardMargin * 2;
+  const chartHeight = 100;
+
+  // Data for selected timeframe
+  const data = allData[timeframe];
+  const sumRevenue = data.reduce((a, b) => a + b, 0);
+  const maxVal = Math.max(...data) * 1.1;
+  const minVal = Math.min(...data) * 0.9;
+  const points: Point[] = data.map((v, i) => ({
+    x: (i / (data.length - 1)) * chartWidth,
+    y: chartHeight - ((v - minVal) / (maxVal - minVal)) * chartHeight,
+  }));
+  const buildPath = (pts: Point[]): string => {
+    if (pts.length < 2) return '';
+    let d = `M${pts[0].x},${pts[0].y}`;
+    for (let i = 1; i < pts.length; i++) {
+      const p0 = pts[i - 1], p1 = pts[i];
+      const midX = (p0.x + p1.x) / 2, midY = (p0.y + p1.y) / 2;
+      d += ` Q${p0.x},${p0.y} ${midX},${midY}`;
+    }
+    const last = pts[pts.length - 1];
+    d += ` T${last.x},${last.y}`;
+    return d;
+  };
+  const linePath = buildPath(points);
+  const areaPath = `${linePath} L${chartWidth},${chartHeight} L0,${chartHeight} Z`;
+
+  // KPI cards for each timeframe
+  const kpiData = {
+    Daily: [
+      { label: 'Expenses', value: 2100, change: -3 },
+      { label: 'Profit', value: 2150, change: 5 },
+      { label: 'Daily Avg', value: 607, change: 2 },
+    ],
+    Weekly: [
+      { label: 'Expenses', value: 4200, change: -2 },
+      { label: 'Profit', value: 3150, change: 4 },
+      { label: 'Daily Avg', value: 900, change: 3 },
+    ],
+    Monthly: [
+      { label: 'Expenses', value: 12000, change: 1 },
+      { label: 'Profit', value: 7150, change: 6 },
+      { label: 'Daily Avg', value: 1200, change: 4 },
+    ],
+  };
+  const kpis = kpiData[timeframe];
+
+  // Quick-action handlers
+  const handleBuildReport = () => alert('Build Report clicked');
+  const handleUploadCSV = () => alert('Upload CSV clicked');
+  const handleScanBill = () => alert('Scan Bill clicked');
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <StatusBar style="dark" backgroundColor="#fff" />
-      <View style={[styles.headerRow, { backgroundColor: colors.background }]}> 
-        <Text style={[styles.greeting, { color: colors.onSurface }]}>Hi, Desi Flavors Katy</Text>
-        <TouchableOpacity style={styles.bellBtn}>
-          <View style={styles.bellCircle}>
-            <Feather name="bell" size={22} color={colors.onSurface} />
-          </View>
-        </TouchableOpacity>
-      </View>
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingTop: HEADER_HEIGHT, paddingBottom: 32 }}
-      >
-      {/* Total Balance Card */}
-      <Card style={[styles.balanceCard, { backgroundColor: colors.primary }]}> 
-        <Card.Content>
-          <Text style={[styles.balanceLabel, { color: Colors.light.white }]}>Total Balance</Text>
-          <Text style={[styles.balanceValue, { color: Colors.light.white }]}>${businessData.totalBalance.toLocaleString()}</Text>
-          <View style={styles.balanceRow}>
-            <View style={styles.balanceItemLarge}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={[styles.balanceSubLarge, { color: Colors.light.white }]}>Revenue</Text>
-                <Feather name="arrow-up-right" size={18} color={Colors.light.green} />
-              </View>
-              <Text style={[styles.balanceSubValueLarge, { color: Colors.light.white }]}>${businessData.revenue.toLocaleString()}</Text>
-            </View>
-            <View style={styles.balanceItemLarge}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={[styles.balanceSubLarge, { color: Colors.light.white }]}>Expenses</Text>
-                <Feather name="arrow-down-right" size={18} color={colors.error || '#EF4444'} />
-              </View>
-              <Text style={[styles.balanceSubValueLarge, { color: Colors.light.white }]}>${businessData.expenses.toLocaleString()}</Text>
-            </View>
-          </View>
-        </Card.Content>
-      </Card>
+    <View style={{ flex:1, backgroundColor: colors.background }}>
+      {/* Always white status bar for all screens */}
+      <StatusBar style="dark" backgroundColor="#fff" translucent={false} />
 
-      {/* Financial Overview */}
-      <Text variant="titleMedium" style={styles.sectionTitle}>Financial Overview</Text>
-      <View style={styles.toggleRow}>
-        {timeFrames.map((frame) => (
-          <Button
-            key={frame}
-            mode={selectedTime === frame ? 'contained' : 'outlined'}
-            onPress={() => setSelectedTime(frame)}
-            style={styles.toggleBtn}
-            labelStyle={{ fontFamily: 'Inter_500Medium' }}
-            buttonColor={selectedTime === frame ? colors.primary : colors.background}
-            textColor={selectedTime === frame ? Colors.light.white : colors.onSurface}
-          >
-            {frame}
-          </Button>
-        ))}
+      {/* Header aligned to bottom */}
+      <View style={[styles.headerRow, { backgroundColor: colors.background }]}>
+        <Text style={[styles.greeting, { color: colors.onSurface }]}>
+          Hi, Desi Flavors Katy
+        </Text>
+        <Pressable style={styles.bellBtn}>
+          <Feather name="bell" size={24} color={colors.onSurface} />
+        </Pressable>
       </View>
-      <View style={{ backgroundColor: '#F3F4F6', borderRadius: 18, marginHorizontal: 0, padding: 12, marginBottom: 32, paddingBottom: 24 }}>
-        <Canvas style={{ width: chartWidth, height: chartHeight }}>
-          <Path
-            path={Skia.Path.MakeFromSVGString(displayedPath) || Skia.Path.Make()}
-            color={'#7C3AED'}
-            style="stroke"
-            strokeWidth={3}
-          />
-        </Canvas>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-          {chartLabels.map((label, i) => (
-            <Text key={label} style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: '#6B7280' }}>{label}</Text>
+
+      <ScrollView contentContainerStyle={{ paddingBottom:100 }}>
+        {/* Overview Dropdown and Title */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginHorizontal: 10, marginBottom: 4, marginTop: 8 }}>
+          <Menu
+            visible={menuVisible}
+            onDismiss={() => setMenuVisible(false)}
+            anchor={
+              <Pressable
+                style={{ flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#7C3AED', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 4 }}
+                onPress={() => setMenuVisible(true)}
+              >
+                <Text style={{ color: '#7C3AED', fontWeight: '600', fontSize: 15 }}>{timeframe}</Text>
+                <Feather name="chevron-down" size={18} color="#7C3AED" style={{ marginLeft: 2 }} />
+              </Pressable>
+            }
+          >
+            {(['Daily', 'Weekly', 'Monthly'] as const).map(opt => (
+              <Menu.Item
+                key={opt}
+                title={opt}
+                onPress={() => {
+                  setTimeframe(opt);
+                  setMenuVisible(false);
+                }}
+              />
+            ))}
+          </Menu>
+          <Text style={{ fontSize: 20, fontWeight: '700', color: '#18181B', marginLeft: 10 }}>Overview</Text>
+        </View>
+
+        {/* ── Chart Card ───────────────────────────────────── */}
+        <Card style={[
+          styles.chartCard,
+          {
+            backgroundColor: '#EDE9FE',
+            marginHorizontal: cardMargin,
+            ...Platform.select({
+              ios: {
+                shadowColor: '#aaa',
+                shadowOffset: { width:0, height:2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
+              },
+              android: { elevation: 4 }
+            })
+          }
+        ]}>
+          <Card.Content style={styles.chartContent}>
+            {/* Full-width Canvas, no left gap */}
+            <Canvas
+              style={{
+                width: chartWidth,
+                height: chartHeight,
+                marginLeft: 0,
+              }}
+            >
+              {/* gradient fill */}
+              <Path
+                path={Skia.Path.MakeFromSVGString(areaPath)!}
+                style="fill"
+                paint={(() => {
+                  const p = Skia.Paint();
+                  p.setShader(
+                    Skia.Shader.MakeLinearGradient(
+                      vec(0,0),
+                      vec(0,chartHeight),
+                      [Skia.Color('#7C3AED33'), Skia.Color('#7C3AED00')],
+                      [0,1],
+                      TileMode.Clamp
+                    )
+                  );
+                  return p;
+                })()}
+              />
+              {/* purple curved line */}
+              <Path
+                path={Skia.Path.MakeFromSVGString(linePath)!}
+                color="#7C3AED"
+                style="stroke"
+                strokeWidth={3}
+              />
+            </Canvas>
+            {/* Number, badge, and subtitle under the chart */}
+            <View style={[styles.chartInfo, { alignItems: 'center', justifyContent: 'center' }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={styles.chartValue}>
+                  ${sumRevenue.toLocaleString()}
+                </Text>
+                <View style={[styles.badge, { marginLeft: 8, marginBottom: 8 }]}> 
+                  <Text style={styles.badgeText}>+25%</Text>
+                </View>
+              </View>
+              <Text style={styles.chartTitleBold}>Total Revenue</Text>
+            </View>
+          </Card.Content>
+        </Card>
+
+        {/* ── Bank Account Balance ───────────────────────── */}
+        <Card style={[
+          styles.balanceCard,
+          {
+            backgroundColor: '#F0FDF4',
+            marginHorizontal: 10,
+            ...Platform.select({
+              ios: {
+                shadowColor: '#aaa',
+                shadowOffset: { width:0, height:2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
+              },
+              android: { elevation: 4 }
+            })
+          }
+        ]}>
+          <Card.Content style={styles.balanceContent}>
+            <View style={styles.balanceLeft}>
+              <Feather name="credit-card" size={24} color="#10B981" />
+              <View style={styles.balanceInfo}>
+                <Text style={styles.balanceLabel}>Bank Account</Text>
+                <Text style={styles.balanceSubtitle}>Primary Business</Text>
+              </View>
+            </View>
+            <Text style={styles.balanceValue}>
+              ${balanceData.balance.toLocaleString()}
+            </Text>
+          </Card.Content>
+        </Card>
+
+        {/* ── KPI GRID ─────────────────────────────────────── */}
+        <View style={[styles.kpiGrid, { marginHorizontal: 10 }]}>
+          {kpis.map(({ label, value, change }) => (
+            <View key={label} style={styles.kpiCard}>
+              <Text style={styles.kpiLabel}>{label}</Text>
+              <Text style={styles.kpiValue}>${value.toLocaleString()}</Text>
+              <Text style={[
+                styles.kpiChange,
+                { color: change >= 0 ? '#22C55E' : '#EF4444' }
+              ]}>
+                {change >= 0 ? '+' : ''}{change}%
+              </Text>
+            </View>
           ))}
         </View>
-      </View>
 
-      {/* Budget Categories */}
-      <View style={styles.categoriesHeader}>
-        <Text variant="titleMedium" style={styles.sectionTitle}>Budget Categories</Text>
-        <Button compact mode="text" onPress={() => {}} labelStyle={{ fontFamily: 'Inter_500Medium' }}>
-          View All
-        </Button>
-      </View>
-      <View style={{ gap: 16 }}>
-        {businessData.categories.map((cat) => {
-          const percent = Math.round((cat.spent / cat.budget) * 100);
-          return (
-            <Card key={cat.label} style={styles.categoryCard}>
-              <Card.Content style={styles.categoryContent}>
-                <View style={[styles.categoryIcon, { backgroundColor: cat.color + '22' }]}> 
-                  <Feather name={cat.icon as any} size={22} color={cat.color} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <View style={styles.categoryRow}>
-                    <Text style={[styles.categoryLabel, { color: colors.onSurface }]}>{cat.label}</Text>
-                    <Text style={[styles.categoryPercent, { color: colors.primary }]}>{percent}%</Text>
-                  </View>
-                  <Text style={styles.categorySub}>{`$${cat.spent.toLocaleString()} / $${cat.budget.toLocaleString()}`}</Text>
-                  <ProgressBar progress={cat.spent / cat.budget} color={cat.color} style={styles.progressBar} />
-                </View>
-              </Card.Content>
-            </Card>
-          );
-        })}
-      </View>
+        {/* ── QUICK ACTIONS ──────────────────────────────── */}
+        <View style={[styles.actionsContainer, { marginHorizontal: 10 }]}>
+          <View style={styles.actionsLeft}>
+            <Pressable style={styles.actionBtn} onPress={handleBuildReport}>
+              <Feather name="bar-chart-2" size={16} color="#7C3AED" />
+              <Text style={styles.actionBtnText}>Build Report</Text>
+            </Pressable>
+            <Pressable style={styles.actionBtn} onPress={handleUploadCSV}>
+              <Feather name="upload" size={16} color="#7C3AED" />
+              <Text style={styles.actionBtnText}>Upload CSV</Text>
+            </Pressable>
+          </View>
+          <View style={styles.actionsRight}>
+            <Pressable style={[styles.actionBtn, styles.scanBillBtn]} onPress={handleScanBill}>
+              <Feather name="camera" size={18} color="#7C3AED" />
+              <Text style={[styles.actionBtnText, { fontSize:15 }]}>Scan Bill</Text>
+            </Pressable>
+          </View>
+        </View>
+
+        {/* ── Sync Status ─────────────────────────────────── */}
+        <View style={[styles.syncCard, { marginTop: -12, marginHorizontal: 10 }]}>
+          <Feather name="folder" size={22} color="#7C3AED" />
+          <Text style={styles.syncText}>All financials updated and synced</Text>
+        </View>
+
+        {/* ── Transactions ─────────────────────────────────── */}
+        <View style={[styles.transactionsHeader, { marginTop: -6, marginHorizontal: 10 }]}>
+          <Text style={styles.sectionTitle}>Latest Transactions</Text>
+          <Button compact mode="text" onPress={()=>{}}>View all</Button>
+        </View>
+        {transactions.map((tx,i) => (
+          <Card key={i} style={[styles.txCard, { marginHorizontal: 10, }]}>
+            <Card.Content style={styles.txContent}>
+              <View style={[styles.txIcon, { backgroundColor: tx.color + '22' }]}>
+                <Feather name={tx.icon} size={20} color={tx.color} />
+              </View>
+              <View style={{ flex:1 }}>
+                <Text style={styles.txLabel}>{tx.label}</Text>
+                <Text style={styles.txDate}>{tx.date}</Text>
+              </View>
+              <Text style={[
+                styles.txAmount,
+                { color: tx.amount >= 0 ? '#34D399' : '#EF4444' }
+              ]}>
+                {tx.amount >= 0 ? '+' : ''}${Math.abs(tx.amount)}
+              </Text>
+            </Card.Content>
+          </Card>
+        ))}
       </ScrollView>
     </View>
   );
@@ -193,139 +339,156 @@ export default function DashboardScreen() {
 
 const styles = StyleSheet.create({
   headerRow: {
-    height: HEADER_HEIGHT,
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    borderBottomWidth: 0,
-    elevation: 0,
+    height: 80,
+    flexDirection:'row',
+    justifyContent:'space-between',
+    alignItems:'center',
+    paddingHorizontal:10,
+    paddingTop:30,
   },
-  bellBtn: {
-    padding: 0,
-    borderRadius: 20,
-    paddingBottom: 9,
+  greeting:       { fontSize:20, fontWeight:'600' },
+  bellBtn:        { padding:8 },
+  chartCard:{
+    marginHorizontal:20,
+    borderRadius:18,
+    overflow:'hidden',
+    marginTop:12
   },
-  bellCircle: {
-    backgroundColor: '#F3F4F6',
-    borderRadius: 20,
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+  chartContent:{
+    padding:0,
+    alignItems:'center'
   },
-  greeting: {
-    fontFamily: 'Inter_500Medium',
-    fontSize: 18,
-    paddingBottom: 14,
+  chartInfo:{
+    alignItems:'center',
+    marginVertical:16
   },
-  balanceCard: {
-    marginHorizontal: 20,
-    marginTop: -80,
-    borderRadius: 18,
-    marginBottom: 16,
-    elevation: 0,
-    minHeight: 120,
-    paddingVertical: 12,
+  chartValue:{
+    fontSize:32,
+    fontWeight:'800',
+    color:'#1F2937'
   },
-  balanceLabel: {
-    fontFamily: 'Inter_500Medium',
-    fontSize: 15,
-    opacity: 0.9,
+  chartTitleBold:{
+    fontSize:16,
+    fontWeight:'700',
+    color:'#6B7280',
+    marginTop:4
   },
-  balanceValue: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 32,
-    marginTop: 2,
-    marginBottom: 10,
+    badge: {
+    backgroundColor:'#22C55E',
+    paddingHorizontal:8,
+    paddingVertical:4,
+    borderRadius:12,
   },
-  balanceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
+  badgeText: {
+    color:'#fff',
+    fontSize:12,
+    fontWeight:'600',
   },
-  balanceItemLarge: {
-    alignItems: 'center',
-    flex: 1,
-    paddingVertical: 0,
+
+  balanceCard:    {
+    marginHorizontal:20,
+    borderRadius:18,
+    marginTop:16,
+    overflow:'hidden',
   },
-  balanceSubLarge: {
-    fontFamily: 'Inter_500Medium',
-    fontSize: 16,
-    marginTop: 6,
-    opacity: 0.9,
+  balanceContent: {
+    flexDirection:'row',
+    justifyContent:'space-between',
+    alignItems:'center',
+    paddingVertical:16,
   },
-  balanceSubValueLarge: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 20,
-    marginTop: 4,
+  balanceLeft:    {
+    flexDirection:'row',
+    alignItems:'center',
   },
-  sectionTitle: {
-    fontFamily: 'Inter_700Bold',
-    marginLeft: 20,
-    marginBottom: 8,
-    marginTop: 8,
+  balanceInfo:    {
+    marginLeft:12,
   },
-  toggleRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
-    marginBottom: 8,
+  balanceLabel:   { fontSize:16, fontWeight:'600', color:'#1F2937' },
+  balanceSubtitle:{ fontSize:12, color:'#6B7280', marginTop:2 },
+  balanceValue:   { fontSize:24, fontWeight:'800', color:'#10B981' },
+
+  kpiGrid:        {
+    flexDirection:'row',
+    justifyContent:'space-between',
+    marginHorizontal:20,
+    marginTop:12,
   },
-  toggleBtn: {
-    marginHorizontal: 4,
-    borderRadius: 20,
-    minWidth: 80,
+  kpiCard:        {
+    flex:1,
+    backgroundColor:'#FEF9C3',
+    borderRadius:12,
+    padding:12,
+    marginHorizontal:4,
+    alignItems:'center',
   },
-  categoriesHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginHorizontal: 20,
-    marginTop: 8,
-    marginBottom: 8,
+  kpiLabel:       { fontSize:14, color:'#4B5563' },
+  kpiValue:       { fontSize:18, fontWeight:'700', marginTop:4 },
+  kpiChange:      { fontSize:13, marginTop:2 },
+
+  actionsContainer:{
+    flexDirection:'row',
+    alignItems:'stretch',
+    marginHorizontal:20,
+    marginTop:10,
+    marginBottom:24,
+    height:100,
   },
-  categoryCard: {
-    borderRadius: 16,
-    marginHorizontal: 20,
-    elevation: 0,
-    backgroundColor: '#fff',
+  actionsLeft:    {
+    flex:1,
+    justifyContent:'space-between',
+    marginRight:8,
   },
-  categoryContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
+  actionsRight:   {
+    flex:1,
+    justifyContent:'center',
   },
-  categoryIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 10,
+  actionBtn:      {
+    backgroundColor:'#F3E8FF',
+    borderRadius:12,
+    flexDirection:'row',
+    alignItems:'center',
+    justifyContent:'center',
+    paddingVertical:14,
+    marginBottom:8,
+    minHeight:44,
   },
-  categoryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  scanBillBtn:    {
+    marginBottom:0,
+    height:'100%',
+    paddingVertical:0,
   },
-  categoryLabel: {
-    fontFamily: 'Inter_500Medium',
-    fontSize: 16,
+  actionBtnText:  { marginLeft:6, fontWeight:'500', color:'#7C3AED', fontSize:14 },
+
+  syncCard:       {
+    flexDirection:'row',
+    alignItems:'center',
+    backgroundColor:'#F5F3FF',
+    borderRadius:12,
+    margin:20,
+    padding:16,
   },
-  categoryPercent: {
-    fontFamily: 'Inter_700Bold',
-    fontSize: 15,
+  syncText:       { marginLeft:10, fontSize:15, color:'#7C3AED' },
+
+  transactionsHeader:{
+    flexDirection:'row',
+    justifyContent:'space-between',
+    alignItems:'center',
+    marginHorizontal:20,
+    marginBottom:4,
   },
-  categorySub: {
-    fontFamily: 'Inter_400Regular',
-    fontSize: 13,
-    opacity: 0.7,
-    marginBottom: 2,
+  sectionTitle:   { fontSize:18, fontWeight:'700' },
+
+  txCard:         { marginHorizontal:20, marginBottom:8, borderRadius:14 },
+  txContent:      { flexDirection:'row', alignItems:'center' },
+  txIcon:         {
+    width:36, height:36,
+    borderRadius:10,
+    justifyContent:'center',
+    alignItems:'center',
+    marginRight:10,
   },
-  progressBar: {
-    height: 7,
-    borderRadius: 8,
-    marginTop: 2,
-  },
-}); 
+  txLabel:        { fontSize:15, fontWeight:'500' },
+  txDate:         { fontSize:12, color:'#6B7280' },
+  txAmount:       { fontSize:16, fontWeight:'700' },
+});

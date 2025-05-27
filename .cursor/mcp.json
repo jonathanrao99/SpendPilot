@@ -1,0 +1,12 @@
+{
+    "mcpServers": {
+      "mcp_square_api": {
+        "command": "npx",
+        "args": ["square-mcp-server", "start"],
+        "env": {
+          "ACCESS_TOKEN": "EAAAl1q4w-gPih9cTpfMF7ryvH7Wp1iliSTmpisWGZUjjBw0Q5JaPrzIegBcI2Qo",
+          "SANDBOX": "true"
+        }
+      }
+    }
+  }
