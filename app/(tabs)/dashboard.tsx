@@ -129,7 +129,7 @@ export default function DashboardScreen() {
       <StatusBar style="dark" backgroundColor="#fff" translucent={false} />
 
       {/* Header aligned to bottom */}
-      <View style={[styles.headerRow, { backgroundColor: colors.background }]}>
+      <View style={[styles.headerRow, { backgroundColor: colors.background }]}> 
         <Text style={[styles.greeting, { color: colors.onSurface }]}>
           Hi, Desi Flavors Katy
         </Text>
@@ -263,8 +263,8 @@ export default function DashboardScreen() {
             <Text style={styles.balanceValue}>
               ${balanceData.balance.toLocaleString()}
             </Text>
-          </Card.Content>
-        </Card>
+        </Card.Content>
+      </Card>
 
         {/* ── KPI GRID ─────────────────────────────────────── */}
         <View style={[styles.kpiGrid, { marginHorizontal: 10 }]}>
@@ -278,7 +278,7 @@ export default function DashboardScreen() {
               ]}>
                 {change >= 0 ? '+' : ''}{change}%
               </Text>
-            </View>
+      </View>
           ))}
         </View>
 
@@ -299,38 +299,38 @@ export default function DashboardScreen() {
               <Feather name="camera" size={18} color="#7C3AED" />
               <Text style={[styles.actionBtnText, { fontSize:15 }]}>Scan Bill</Text>
             </Pressable>
-          </View>
         </View>
+      </View>
 
         {/* ── Sync Status ─────────────────────────────────── */}
         <View style={[styles.syncCard, { marginTop: -12, marginHorizontal: 10 }]}>
           <Feather name="folder" size={22} color="#7C3AED" />
           <Text style={styles.syncText}>All financials updated and synced</Text>
-        </View>
+      </View>
 
         {/* ── Transactions ─────────────────────────────────── */}
         <View style={[styles.transactionsHeader, { marginTop: -6, marginHorizontal: 10 }]}>
           <Text style={styles.sectionTitle}>Latest Transactions</Text>
           <Button compact mode="text" onPress={()=>{}}>View all</Button>
-        </View>
+                </View>
         {transactions.map((tx,i) => (
           <Card key={i} style={[styles.txCard, { marginHorizontal: 10, }]}>
             <Card.Content style={styles.txContent}>
               <View style={[styles.txIcon, { backgroundColor: tx.color + '22' }]}>
                 <Feather name={tx.icon} size={20} color={tx.color} />
-              </View>
+                  </View>
               <View style={{ flex:1 }}>
                 <Text style={styles.txLabel}>{tx.label}</Text>
                 <Text style={styles.txDate}>{tx.date}</Text>
-              </View>
+                </View>
               <Text style={[
                 styles.txAmount,
                 { color: tx.amount >= 0 ? '#34D399' : '#EF4444' }
               ]}>
                 {tx.amount >= 0 ? '+' : ''}${Math.abs(tx.amount)}
               </Text>
-            </Card.Content>
-          </Card>
+              </Card.Content>
+            </Card>
         ))}
       </ScrollView>
     </View>
