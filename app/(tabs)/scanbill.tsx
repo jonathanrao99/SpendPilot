@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, FlatList, Image, TextInput } from 'react-native';
-import { Text, useTheme, Card, ProgressBar, Button } from 'react-native-paper';
+import { Text, useTheme, Card, ProgressBar, Button, List } from 'react-native-paper';
 import Feather from '@expo/vector-icons/Feather';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Modal from 'react-native-modal';
@@ -44,12 +44,21 @@ export default function ScanBillScreen() {
     setModalVisible(true);
   };
 
+  // Group bills by month-year
+  const groupedBills: Record<string, Bill[]> = {};
+  bills.forEach(bill => {
+    const d = new Date(bill.date);
+    const month = d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+    if (!groupedBills[month]) groupedBills[month] = [];
+    groupedBills[month].push(bill);
+  });
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={styles.headerRow}><Text style={styles.headerTitle}>Scan Bill</Text></View>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingTop: HEADER_HEIGHT, paddingBottom: 100 }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingTop: HEADER_HEIGHT, paddingBottom: 160 }}>
         {/* Top Card with Skia Progress */}
-        <Card style={[styles.topCard, styles.prominentCard]}>
+        <Card style={[styles.topCard, styles.prominentCard, { backgroundColor: '#EDE9FE', borderColor: '#EDE9FE' }]}>
           <Card.Content>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <Text style={styles.topCardTitle}>Total Spent</Text>
@@ -74,33 +83,36 @@ export default function ScanBillScreen() {
             </View>
           </Card.Content>
         </Card>
-        {/* Bills List */}
-        <Text style={styles.sectionTitle}>Logged Bills</Text>
-        <FlatList
-          data={bills}
-          keyExtractor={item => item.id}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              onPress={() => handleBillPress(item)}
-              activeOpacity={0.8}
-              accessibilityLabel={item.store + ' ' + item.amount}
-              onPressIn={() => { /* bounce animation could be added here */ }}
+        {/* Logged Bills Accordion */}
+        <Text style={[styles.sectionTitle, { marginHorizontal: 20 }]}>Logged Bills</Text>
+        <List.Section>
+          {Object.entries(groupedBills).map(([month, items]) => (
+            <List.Accordion
+              key={month}
+              title={month}
+              style={{ backgroundColor: '#EDE9FE', borderRadius: 12, marginHorizontal: 10, marginBottom: 4 }}
+              titleStyle={{ color: '#7C3AED', fontFamily: 'Inter_700Bold', fontSize: 16 }}
+              left={props => <List.Icon {...props} icon="calendar" color="#7C3AED" />}
             >
-              <Card style={[styles.billCard, { borderLeftWidth: 6, borderLeftColor: item.category === 'Cooking Supplies' ? '#7C3AED' : item.category === 'Electronics' ? '#22C55E' : item.category === 'Gas' ? '#F59E42' : '#6B7280' }] }>
-                <Card.Content style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <MaterialIcons name="receipt" size={32} color={colors.primary} style={{ marginRight: 16 }} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.billStore}>{item.store}</Text>
-                    <Text style={styles.billDate}>{item.date}</Text>
-                  </View>
-                  <Text style={styles.billAmount}>${item.amount.toFixed(2)}</Text>
-                </Card.Content>
-              </Card>
-            </TouchableOpacity>
-          )}
-          style={{ marginTop: 20 }}
-          contentContainerStyle={{ paddingBottom: 120 }}
-        />
+              {items
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                .map(item => (
+                  <TouchableOpacity key={item.id} onPress={() => handleBillPress(item)} activeOpacity={0.8}>
+                    <Card style={[styles.billCard, { borderLeftColor: item.category === 'Cooking Supplies' ? '#7C3AED' : item.category === 'Electronics' ? '#22C55E' : item.category === 'Gas' ? '#F59E42' : '#6B7280', width: '95%', alignSelf: 'center' }]}>
+                      <Card.Content style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <MaterialIcons name="receipt" size={32} color={colors.primary} style={{ marginRight: 16 }} />
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.billStore}>{item.store}</Text>
+                          <Text style={styles.billDate}>{item.date}</Text>
+                        </View>
+                        <Text style={styles.billAmount}>${item.amount.toFixed(2)}</Text>
+                      </Card.Content>
+                    </Card>
+                  </TouchableOpacity>
+                ))}
+            </List.Accordion>
+          ))}
+        </List.Section>
       </ScrollView>
       {/* Bill Modal */}
       <Modal isVisible={modalVisible} onBackdropPress={() => setModalVisible(false)}>
@@ -120,7 +132,7 @@ export default function ScanBillScreen() {
         </View>
       </Modal>
       {/* Floating Action Button */}
-      <View style={styles.fabContainer}>
+      <View style={[styles.fabContainer, { bottom: 90 }]}>
         {fabOpen && (
           <View style={styles.fabActions}>
             <TouchableOpacity style={styles.fabActionBtn} onPress={() => {/* TODO: navigate to scan bill */}}>
@@ -163,9 +175,9 @@ const styles = StyleSheet.create({
     elevation: 0,
     minHeight: 120,
     paddingVertical: 12,
-    backgroundColor: '#fff',
+    backgroundColor: '#EDE9FE',
     borderWidth: 1,
-    borderColor: '#F3F4F6',
+    borderColor: '#EDE9FE',
   },
   prominentCard: {},
   topCardTitle: {
@@ -263,7 +275,7 @@ const styles = StyleSheet.create({
   fabContainer: {
     position: 'absolute',
     right: 24,
-    bottom: 40,
+    bottom: 100,
     alignItems: 'flex-end',
   },
   fab: {

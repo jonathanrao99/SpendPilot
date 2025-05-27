@@ -153,7 +153,7 @@ export default function DashboardScreen() {
                 <Feather name="chevron-down" size={18} color="#7C3AED" style={{ marginLeft: 2 }} />
               </Pressable>
             }
-          >
+      >
             {(['Daily', 'Weekly', 'Monthly'] as const).map(opt => (
               <Menu.Item
                 key={opt}
