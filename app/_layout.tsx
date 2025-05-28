@@ -107,7 +107,14 @@ function RootLayoutNav() {
       <ThemeProvider value={DefaultTheme}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+          <Stack.Screen
+            name="newbill"
+            options={{
+              title: 'New Bill',
+              presentation: 'modal',
+              headerShown: true,
+            }}
+          />
         </Stack>
       </ThemeProvider>
     </PaperProvider>

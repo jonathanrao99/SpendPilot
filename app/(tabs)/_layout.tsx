@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, Tabs } from 'expo-router';
 import { Pressable, View, TouchableOpacity } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Feather from '@expo/vector-icons/Feather';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -66,47 +67,49 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <Tabs
-      tabBar={props => <CustomTabBar {...props} />}
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <Tabs.Screen
-        name="dashboard"
-        options={{
-          title: 'Dashboard',
-          tabBarIcon: ({ color }) => <MaterialCommunityIcons name="view-dashboard-outline" size={24} color={color} />,
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Tabs
+        tabBar={props => <CustomTabBar {...props} />}
+        screenOptions={{
+          headerShown: false,
         }}
-      />
-      <Tabs.Screen
-        name="analytics"
-        options={{
-          title: 'Analytics',
-          tabBarIcon: ({ color }) => <Feather name="pie-chart" size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="delivery"
-        options={{
-          title: 'Delivery',
-          tabBarIcon: ({ color }) => <MaterialIcons name="delivery-dining" size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="scanbill"
-        options={{
-          title: 'Scan Bill',
-          tabBarIcon: ({ color }) => <Ionicons name="receipt-outline" size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: 'Settings',
-          tabBarIcon: ({ color }) => <Feather name="settings" size={28} color={color} />,
-        }}
-      />
-    </Tabs>
+      >
+        <Tabs.Screen
+          name="dashboard"
+          options={{
+            title: 'Dashboard',
+            tabBarIcon: ({ color }) => <MaterialCommunityIcons name="view-dashboard-outline" size={24} color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="analytics"
+          options={{
+            title: 'Analytics',
+            tabBarIcon: ({ color }) => <Feather name="pie-chart" size={24} color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="delivery"
+          options={{
+            title: 'Delivery',
+            tabBarIcon: ({ color }) => <MaterialIcons name="delivery-dining" size={24} color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="scanbill"
+          options={{
+            title: 'Scan Bill',
+            tabBarIcon: ({ color }) => <Ionicons name="receipt-outline" size={24} color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="settings"
+          options={{
+            title: 'Settings',
+            tabBarIcon: ({ color }) => <Feather name="settings" size={28} color={color} />,
+          }}
+        />
+      </Tabs>
+    </GestureHandlerRootView>
   );
 }

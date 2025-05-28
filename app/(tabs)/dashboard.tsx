@@ -126,7 +126,7 @@ export default function DashboardScreen() {
   return (
     <View style={{ flex:1, backgroundColor: colors.background }}>
       {/* Always white status bar for all screens */}
-      <StatusBar style="dark" backgroundColor="#fff" translucent={false} />
+      <StatusBar style="dark" />
 
       {/* Header aligned to bottom */}
       <View style={[styles.headerRow, { backgroundColor: colors.background }]}> 
