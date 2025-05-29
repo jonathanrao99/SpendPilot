@@ -9,6 +9,7 @@ import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import { useFonts as useInterFonts, Inter_400Regular, Inter_500Medium, Inter_700Bold } from '@expo-google-fonts/inter';
 import Colors from '@/constants/Colors';
 import type { MD3Theme } from 'react-native-paper';
+import { BillsProvider } from '@/components/BillsContext';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -103,20 +104,22 @@ function RootLayoutNav() {
     },
   } as any;
   return (
-    <PaperProvider theme={theme}>
-      <ThemeProvider value={DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="newbill"
-            options={{
-              title: 'New Bill',
-              presentation: 'modal',
-              headerShown: true,
-            }}
-          />
-        </Stack>
-      </ThemeProvider>
-    </PaperProvider>
+    <BillsProvider>
+      <PaperProvider theme={theme}>
+        <ThemeProvider value={DefaultTheme}>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="newbill"
+              options={{
+                title: 'New Bill',
+                presentation: 'modal',
+                headerShown: true,
+              }}
+            />
+          </Stack>
+        </ThemeProvider>
+      </PaperProvider>
+    </BillsProvider>
   );
 }

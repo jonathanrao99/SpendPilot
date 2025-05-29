@@ -7,6 +7,10 @@ import { useRouter } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Feather from '@expo/vector-icons/Feather';
 import { getTmpImage } from './utils/tmpImageStore';
+import { useBills, Bill } from '@/components/BillsContext';
+
+// Screen width for image sizing
+const SCREEN_WIDTH = Dimensions.get('window').width;
 
 const CATEGORY_OPTIONS = [
   'Food Supplies',
@@ -16,17 +20,10 @@ const CATEGORY_OPTIONS = [
   'Other',
 ];
 
-// Placeholder for bills context/state
-const addBill = (bill: any) => {
-  // TODO: Replace with context or state update
-  console.log('Bill added:', bill);
-};
-
-const SCREEN_WIDTH = Dimensions.get('window').width;
-
 export default function NewBillScreen() {
   const { colors } = useTheme();
   const router = useRouter();
+  const { bills, setBills } = useBills();
   const imageUri = getTmpImage();
 
   const [store, setStore] = useState('');
@@ -56,14 +53,17 @@ export default function NewBillScreen() {
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
     // Add bill to bills list (replace with context/state in real app)
-    addBill({
+    const newBill: Bill = {
+      id: Date.now().toString(),
       image: imageUri,
       store,
-      date: date.toISOString(),
+      date: date.toISOString().split('T')[0], // Only YYYY-MM-DD
       category: category === 'Other' ? otherCategory : category,
-      tax,
-      total,
-    });
+      tax: parseFloat(tax),
+      amount: parseFloat(total),
+      total: parseFloat(total),
+    };
+    setBills([newBill, ...bills]);
     router.replace('/scanbill');
   };
 

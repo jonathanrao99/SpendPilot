@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, ScrollView, StyleSheet, Switch } from 'react-native';
 import { Text, useTheme, Card } from 'react-native-paper';
+import ScreenHeader from '@/components/ScreenHeader';
 
 const HEADER_HEIGHT = 80;
 const businessInfo = [
@@ -18,7 +19,7 @@ export default function SettingsScreen() {
   const { colors } = useTheme();
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={styles.headerRow}><Text style={styles.headerTitle}>Settings</Text></View>
+      <ScreenHeader title="Settings" />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingTop: HEADER_HEIGHT, paddingBottom: 32 }}>
         {/* Profile Card */}
         <Card style={[styles.profileCard, styles.prominentCard]}>

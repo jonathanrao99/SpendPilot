@@ -2,6 +2,7 @@ import React from 'react';
 import { View, ScrollView, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { Text, useTheme, Card } from 'react-native-paper';
 import { Canvas, Rect, Skia } from '@shopify/react-native-skia';
+import ScreenHeader from '@/components/ScreenHeader';
 
 const HEADER_HEIGHT = 80;
 const kpis = [
@@ -25,7 +26,7 @@ export default function DeliveryScreen() {
   const { colors } = useTheme();
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={styles.headerRow}><Text style={styles.headerTitle}>Delivery</Text></View>
+      <ScreenHeader title="Delivery" />
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingTop: HEADER_HEIGHT, paddingBottom: 32 }}>
         {/* KPI Cards */}
         <View style={[styles.kpiCardContainer, styles.prominentCard]}>
