@@ -21,7 +21,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.joniovo99.SpendPilot"
     },
     "web": {
       "bundler": "metro",
@@ -30,7 +31,9 @@
     },
     "plugins": [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      "expo-camera",
+      "expo-image-picker"
     ],
     "experiments": {
       "typedRoutes": true
@@ -41,9 +44,7 @@
         "projectId": "a3129b78-ecb8-4816-9d98-fce9e5a89c21"
       }
     },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
     "updates": {
       "url": "https://u.expo.dev/a3129b78-ecb8-4816-9d98-fce9e5a89c21"
     }

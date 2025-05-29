@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+'use client';
+
+import React, { useState, useRef } from 'react';
 import {
   View,
   ScrollView,
@@ -17,7 +19,7 @@ import { Canvas, RoundedRect } from '@shopify/react-native-skia';
 import * as Haptics from 'expo-haptics';
 import { Swipeable } from 'react-native-gesture-handler';
 import { useRouter } from 'expo-router';
-import ImagePicker from 'react-native-image-crop-picker';
+import * as ImagePicker from 'expo-image-picker';
 
 const HEADER_HEIGHT = 100;
 
@@ -60,40 +62,23 @@ export default function ScanBillScreen() {
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [fabOpen, setFabOpen] = useState(false);
 
-  // FAB action handlers: camera with looping crop and multi-image picker
+  // FAB action handlers: navigate to custom camera/crop screen
   const handleFabScan = async () => {
-    // guard native module
-    if (!ImagePicker || typeof ImagePicker.openCamera !== 'function') {
-      Alert.alert('Unavailable', 'Camera picker not linked. Please rebuild the app.');
-      return;
-    }
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const picked: string[] = [];
-    const takePhoto = async () => {
-      try {
-        const image: any = await ImagePicker.openCamera({ cropping: true });
-        picked.push(image.path);
-        Alert.alert('Photo captured', 'Do you want to take another photo?', [
-          { text: 'Take More', onPress: () => takePhoto() },
-          { text: 'Done', onPress: () => router.push(`/newbill?images=${encodeURIComponent(JSON.stringify(picked))}`) },
-        ]);
-      } catch (e) {
-        console.log(e);
-      }
-    };
-    takePhoto();
+    router.push({ pathname: '/camera-crop' });
   };
   const handleFabUpload = async () => {
-    // guard native module
-    if (!ImagePicker || typeof ImagePicker.openPicker !== 'function') {
-      Alert.alert('Unavailable', 'Image picker not linked. Please rebuild the app.');
-      return;
-    }
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
-      const photos: any = await ImagePicker.openPicker({ multiple: true, cropping: true });
-      const paths: string[] = Array.isArray(photos) ? photos.map((p: any) => p.path) : [(photos as any).path];
-      router.push(`/newbill?images=${encodeURIComponent(JSON.stringify(paths))}`);
+      const result = await ImagePicker.launchImageLibraryAsync({
+        allowsMultipleSelection: true,
+        allowsEditing: false,
+        quality: 1,
+      });
+      if (!result.canceled) {
+        const uris = result.assets.map(a => a.uri);
+        router.push({ pathname: '/newbill', params: { images: JSON.stringify(uris) } });
+      }
     } catch (e) {
       console.log(e);
     }
