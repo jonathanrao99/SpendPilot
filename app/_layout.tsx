@@ -10,6 +10,7 @@ import { useFonts as useInterFonts, Inter_400Regular, Inter_500Medium, Inter_700
 import Colors from '@/constants/Colors';
 import type { MD3Theme } from 'react-native-paper';
 import { BillsProvider } from '@/components/BillsContext';
+import { LogBox } from 'react-native';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -23,6 +24,8 @@ export const unstable_settings = {
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+LogBox.ignoreLogs(['Text strings must be rendered within a <Text> component']);
 
 export default function RootLayout() {
   const [loaded, error] = useInterFonts({

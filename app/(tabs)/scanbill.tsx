@@ -384,19 +384,16 @@ export default function ScanBillScreen() {
         {topCategories.length > 0 && (
           <>
             <View style={styles.historyHeader}>
-              <Text style={[styles.sectionTitle, { color: colors.primary }]}>Top Categories</Text>
+              <Text style={[styles.sectionTitle, { color: colors.onSurface }]}>Top Categories</Text>
             </View>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16, paddingHorizontal: 16 }}>
-              {topCategories.map(([cat, total], idx) => (
-                <Card key={cat ?? idx} style={[styles.txCard, { width: 100, height: 100, marginHorizontal: 8, backgroundColor: '#FEF9C3' }]}>  {/* Light yellow */}
-                  <Card.Content style={styles.txContent}>
-                    <View style={{ alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-                      {getCategoryIcon(cat)}
-                      <Text style={[styles.txLabel, { marginTop: 4 }]}>{cat ?? 'Unknown'}</Text>
-                      <Text style={[styles.txAmount, { marginTop: 2 }]}>{`$${((total ?? 0).toFixed(2))}`}</Text>
-                    </View>
-                  </Card.Content>
-                </Card>
+              {topCategories.map(([cat, total]) => (
+                <MiniKPI
+                  key={cat}
+                  icon={getCategoryIcon(cat)}
+                  label={cat}
+                  value={`$${total.toFixed(2)}`}
+                />
               ))}
             </View>
           </>
@@ -408,7 +405,7 @@ export default function ScanBillScreen() {
           </View>
         )}
         <View style={styles.historyHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.primary }]}>Bill History</Text>
+          <Text style={[styles.sectionTitle, { color: colors.onSurface }]}>Bill History</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <TouchableOpacity onPress={handleDownloadAll} style={{ padding: 8 }}>
               <Feather name="download" size={20} color={colors.primary} />

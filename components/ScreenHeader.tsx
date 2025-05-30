@@ -7,8 +7,7 @@ export interface ScreenHeaderProps {
   style?: import('react-native').ViewStyle;
 }
 
-export default function ScreenHeader({ title }: ScreenHeaderProps) {
-  const { style } = arguments[0] as ScreenHeaderProps;
+export default function ScreenHeader({ title, style }: ScreenHeaderProps) {
   const { colors } = useTheme();
   return (
     <View style={[styles.headerRow, { backgroundColor: colors.background }, style]}> 
