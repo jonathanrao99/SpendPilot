@@ -7,7 +7,8 @@ import { useRouter } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Feather from '@expo/vector-icons/Feather';
 import { getTmpImage } from './utils/tmpImageStore';
-import { useBills, Bill } from '@/components/BillsContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from './utils/supabaseClient';
 
 // Screen width for image sizing
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -23,7 +24,6 @@ const CATEGORY_OPTIONS = [
 export default function NewBillScreen() {
   const { colors } = useTheme();
   const router = useRouter();
-  const { bills, setBills } = useBills();
   const imageUri = getTmpImage();
 
   const [store, setStore] = useState('');
@@ -48,22 +48,42 @@ export default function NewBillScreen() {
     return newErrors;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const newErrors = validate();
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
-    // Add bill to bills list (replace with context/state in real app)
-    const newBill: Bill = {
-      id: Date.now().toString(),
-      image: imageUri,
-      store,
-      date: date.toISOString().split('T')[0], // Only YYYY-MM-DD
-      category: category === 'Other' ? otherCategory : category,
-      tax: parseFloat(tax),
+    // Insert expense into Supabase
+    const merchantId = await AsyncStorage.getItem('merchant_id');
+    let receiptUrl: string | null = null;
+    if (imageUri) {
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
+      const filename = `${merchantId}/${Date.now()}.jpg`;
+      const { data: uploadData, error: uploadError } = await supabase
+        .storage.from('receipts')
+        .upload(filename, blob);
+      if (uploadError) {
+        console.error(uploadError);
+      } else {
+        const { publicUrl } = supabase.storage
+          .from('receipts')
+          .getPublicUrl(uploadData.path).data;
+        receiptUrl = publicUrl;
+      }
+    }
+    const { error: insertError } = await supabase.from('expenses').insert({
+      user_id: merchantId,
       amount: parseFloat(total),
-      total: parseFloat(total),
-    };
-    setBills([newBill, ...bills]);
+      category: category === 'Other' ? otherCategory : category,
+      description: store,
+      date: date.toISOString(),
+      receipt_url: receiptUrl,
+    });
+    if (insertError) {
+      console.error(insertError);
+      return;
+    }
+    // Navigate back to ScanBill tab
     router.replace('/scanbill');
   };
 

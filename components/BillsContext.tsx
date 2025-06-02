@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '../app/utils/supabaseClient';
 
 export interface Bill {
   id: string;
@@ -11,15 +13,6 @@ export interface Bill {
   total: number;
 }
 
-const initialBills: Bill[] = [
-  { id: '1', image: null, store: 'Walmart', date: '2024-06-01', category: 'Food Supplies', tax: 8.5, amount: 120.45, total: 120.45 },
-  { id: '2', image: null, store: 'Best Buy', date: '2024-06-03', category: 'Electronics', tax: 25, amount: 340, total: 340 },
-  { id: '3', image: null, store: 'Shell', date: '2024-06-05', category: 'Gas', tax: 4.2, amount: 60, total: 60 },
-  { id: '4', image: null, store: 'Target', date: '2024-05-28', category: 'Groceries', tax: 6, amount: 80, total: 80 },
-  { id: '5', image: null, store: 'Starbucks', date: '2024-05-27', category: 'Food', tax: 1.25, amount: 15.25, total: 15.25 },
-  { id: '6', image: null, store: 'Home Depot', date: '2024-05-20', category: 'Hardware', tax: 16, amount: 200, total: 200 },
-];
-
 interface BillsContextType {
   bills: Bill[];
   setBills: React.Dispatch<React.SetStateAction<Bill[]>>;
@@ -28,7 +21,33 @@ interface BillsContextType {
 const BillsContext = createContext<BillsContextType | undefined>(undefined);
 
 export function BillsProvider({ children }: { children: ReactNode }) {
-  const [bills, setBills] = useState<Bill[]>(initialBills);
+  const [bills, setBills] = useState<Bill[]>([]);
+  useEffect(() => {
+    (async () => {
+      const merchantId = await AsyncStorage.getItem('merchant_id');
+      if (!merchantId) return;
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('*')
+        .eq('user_id', merchantId)
+        .order('date', { ascending: false });
+      if (error) console.error(error);
+      else {
+        const loaded = data.map(e => ({
+          id: e.id,
+          image: e.receipt_url,
+          store: e.description,
+          date: e.date.split('T')[0],
+          category: e.category,
+          tax: 0,
+          amount: parseFloat(e.amount.toString()),
+          total: parseFloat(e.amount.toString()),
+        }));
+        setBills(loaded);
+      }
+    })();
+  }, []);
+
   return <BillsContext.Provider value={{ bills, setBills }}>{children}</BillsContext.Provider>;
 }
 

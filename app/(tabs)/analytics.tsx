@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { Text, useTheme, Card } from 'react-native-paper';
 import { Canvas, Path, Skia } from '@shopify/react-native-skia';
 import ScreenHeader from '@/components/ScreenHeader';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const HEADER_HEIGHT = 80;
 const kpis = [
@@ -24,8 +25,38 @@ const points = salesTrend.map((v, i) => {
 });
 const pathStr = points.reduce((acc, p, i) => acc + (i === 0 ? `M${p.x},${p.y}` : ` L${p.x},${p.y}`), '');
 
+// State for dynamic Square report metrics
+const [metrics, setMetrics] = useState(kpis);
+const [trendData, setTrendData] = useState(salesTrend);
+const [labelsState, setLabelsState] = useState(chartLabels);
+
 export default function AnalyticsScreen() {
   const { colors } = useTheme();
+  // Fetch Square report data on mount
+  useEffect(() => {
+    (async () => {
+      const accessToken = await AsyncStorage.getItem('square_access_token');
+      if (!accessToken) return;
+      // TODO: Replace with real Square Reports API calls
+      setMetrics([
+        { label: 'Total Sales', value: '$12,500' },
+        { label: 'Net Revenue', value: '$11,800' },
+        { label: 'Transactions', value: '320' },
+        { label: 'Avg Order Value', value: '$39.06' },
+        { label: 'Refund Rate', value: '5.6%' },
+        { label: 'Top 5 Items Sold', value: 'Widget A (120), Widget B (98)…' },
+        { label: 'Category Breakdown', value: 'Food 40%, Electronics 30%…' },
+        { label: 'Repeat Customer Rate', value: '24%' },
+        { label: 'New Customers', value: '75' },
+        { label: 'Square Fees Paid', value: '$375' },
+        { label: 'Sales by Channel', value: 'In-store $7k, Online $4k, Mobile $1.5k' },
+        { label: 'Avg Items per Order', value: '3.2' },
+        { label: 'Top 5 Customers', value: 'Alice ($500), Bob ($450)…' },
+      ]);
+      setTrendData([4, 7, 5, 9, 7, 3, 2]);
+      setLabelsState(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']);
+    })();
+  }, []);
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <ScreenHeader title="Analytics" />
@@ -33,7 +64,7 @@ export default function AnalyticsScreen() {
         {/* KPI Cards */}
         <View style={[styles.kpiCardContainer, styles.prominentCard]}>
           <FlatList
-            data={kpis}
+            data={metrics}
             horizontal
             showsHorizontalScrollIndicator={false}
             keyExtractor={item => item.label}
@@ -58,7 +89,7 @@ export default function AnalyticsScreen() {
             />
           </Canvas>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-            {chartLabels.map((label) => (
+            {labelsState.map((label) => (
               <Text key={label} style={styles.chartLabel}>{label}</Text>
             ))}
           </View>

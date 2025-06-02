@@ -1,9 +1,10 @@
+import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 import { useFonts as useInterFonts, Inter_400Regular, Inter_500Medium, Inter_700Bold } from '@expo-google-fonts/inter';
@@ -11,6 +12,7 @@ import Colors from '@/constants/Colors';
 import type { MD3Theme } from 'react-native-paper';
 import { BillsProvider } from '@/components/BillsContext';
 import { LogBox } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -54,6 +56,11 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
+  const [merchantId, setMerchantId] = useState<string | null | undefined>(undefined);
+  useEffect(() => {
+    AsyncStorage.getItem('merchant_id').then(id => setMerchantId(id));
+  }, []);
+  if (merchantId === undefined) return null;
   const isDark = false;
   const interFont = {
     fontFamily: 'Inter_400Regular',
@@ -111,15 +118,21 @@ function RootLayoutNav() {
       <PaperProvider theme={theme}>
         <ThemeProvider value={DefaultTheme}>
           <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="newbill"
-              options={{
-                title: 'New Bill',
-                presentation: 'modal',
-                headerShown: true,
-              }}
-            />
+            {merchantId === null ? (
+              <Stack.Screen name="squareauth" options={{ headerShown: false }} />
+            ) : (
+              <>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="newbill"
+                  options={{
+                    title: 'New Bill',
+                    presentation: 'modal',
+                    headerShown: true,
+                  }}
+                />
+              </>
+            )}
           </Stack>
         </ThemeProvider>
       </PaperProvider>
